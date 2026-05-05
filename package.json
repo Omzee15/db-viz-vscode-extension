@@ -3,6 +3,12 @@
   "displayName": "DB Viz - Database Schema Visualizer",
   "description": "DBML & SQL schema editor with interactive ERD diagram. Identical to the db-viz web app.",
   "version": "0.0.1",
+  "publisher": "Buildc3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Omzee15/db-viz-vscode-extension.git"
+  },
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
