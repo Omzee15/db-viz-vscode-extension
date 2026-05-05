@@ -1,0 +1,155 @@
+{
+  "name": "db-viz-vscode",
+  "displayName": "DB Viz - Database Schema Visualizer",
+  "description": "DBML & SQL schema editor with interactive ERD diagram. Identical to the db-viz web app.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "db-viz.openViewer",
+        "title": "DB Viz: Open Schema Visualizer"
+      },
+      {
+        "command": "db-viz.newFile",
+        "title": "DB Viz: New DBML File",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "db-viz.newFolder",
+        "title": "DB Viz: New Folder",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "db-viz.rename",
+        "title": "Rename"
+      },
+      {
+        "command": "db-viz.deleteFile",
+        "title": "Delete"
+      },
+      {
+        "command": "db-viz.deleteFolder",
+        "title": "Delete"
+      },
+      {
+        "command": "db-viz.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "db-viz-sidebar",
+          "title": "DB Viz",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "db-viz-sidebar": [
+        {
+          "id": "db-viz.fileExplorer",
+          "name": "Schema Files",
+          "type": "tree",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "db-viz.newFile",
+          "when": "view == db-viz.fileExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "db-viz.newFolder",
+          "when": "view == db-viz.fileExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "db-viz.refresh",
+          "when": "view == db-viz.fileExplorer",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "db-viz.newFile",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFolder",
+          "group": "1_new@1"
+        },
+        {
+          "command": "db-viz.newFolder",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFolder",
+          "group": "1_new@2"
+        },
+        {
+          "command": "db-viz.rename",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFile",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "db-viz.rename",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFolder",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "db-viz.deleteFile",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFile",
+          "group": "3_delete@1"
+        },
+        {
+          "command": "db-viz.deleteFolder",
+          "when": "view == db-viz.fileExplorer && viewItem == schemaFolder",
+          "group": "3_delete@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "db-viz.newFile",
+          "group": "navigation"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "db-viz.schemaEditor",
+        "displayName": "DB Schema Visualizer",
+        "selector": [
+          { "filenamePattern": "*.dbml" },
+          { "filenamePattern": "*.sql" }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "vscode:prepublish": "node esbuild.js --production",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "@dbml/core": "3.14.1",
+    "@xyflow/react": "12.10.2",
+    "lucide-react": "1.8.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.0.0"
+  }
+}

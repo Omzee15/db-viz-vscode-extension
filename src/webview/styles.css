@@ -1,0 +1,61 @@
+/* Solarized Light colour palette — mirrors db-viz globals.css */
+:root {
+  --background: #F5EFE7;
+  --foreground: #3E2723;
+  --primary: #9B8F5E;
+  --primary-foreground: #FFFFFF;
+  --destructive: #C4756C;
+  --muted: #D9CDBF;
+  --muted-foreground: #8B7355;
+  --border: #D9CDBF;
+  --card: #EBE3D5;
+  --accent: #E8DFD0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ReactFlow overrides to match solarised light */
+.react-flow__controls {
+  background: #E8DFD0 !important;
+  border: 1px solid #D9CDBF !important;
+  border-radius: 8px !important;
+}
+.react-flow__controls-button {
+  background: #E8DFD0 !important;
+  border-bottom: 1px solid #D9CDBF !important;
+  fill: #3E2723 !important;
+}
+.react-flow__controls-button:hover {
+  background: #D9CDBF !important;
+}
+.react-flow__minimap {
+  background: #E8DFD0 !important;
+  border: 1px solid #D9CDBF !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #EBE3D5;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9BCAC;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9B8F5E;
+}

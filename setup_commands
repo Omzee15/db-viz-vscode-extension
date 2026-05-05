@@ -1,0 +1,17 @@
+Option 1 — F5 in VS Code (recommended for development)
+Open the extension folder in VS Code:
+Press F5 (or go to Run → Start Debugging)
+A new Extension Development Host window opens
+In that window, open any .dbml or .sql file — the DB Viz editor launches automatically
+Click the database icon in the activity bar to see the Schema Files sidebar
+Option 2 — Install it permanently (.vsix package)
+cd /Users/pikachu/Desktop/pika/db-viz-extension
+
+# Install vsce if you don't have it
+npm install -g @vscode/vsce
+
+# Package it
+vsce package --no-dependencies
+
+# Install the generated .vsix into VS Code
+code --install-extension db-viz-vscode-0.0.1.vsix
