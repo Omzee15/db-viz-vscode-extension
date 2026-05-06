@@ -1,21 +1,399 @@
-"use strict";var D=Object.create;var u=Object.defineProperty;var F=Object.getOwnPropertyDescriptor;var C=Object.getOwnPropertyNames;var I=Object.getPrototypeOf,U=Object.prototype.hasOwnProperty;var k=(i,s)=>{for(var o in s)u(i,o,{get:s[o],enumerable:!0})},y=(i,s,o,a)=>{if(s&&typeof s=="object"||typeof s=="function")for(let t of C(s))!U.call(i,t)&&t!==o&&u(i,t,{get:()=>s[t],enumerable:!(a=F(s,t))||a.enumerable});return i};var g=(i,s,o)=>(o=i!=null?D(I(i)):{},y(s||!i||!i.__esModule?u(o,"default",{value:i,enumerable:!0}):o,i)),x=i=>y(u({},"__esModule",{value:!0}),i);var W={};k(W,{activate:()=>S,deactivate:()=>P});module.exports=x(W);var e=g(require("vscode")),c=g(require("path"));function S(i){i.subscriptions.push(e.window.registerCustomEditorProvider("db-viz.schemaEditor",new b(i),{webviewOptions:{retainContextWhenHidden:!0},supportsMultipleEditorsPerDocument:!1}));let s=new w,o=e.window.createTreeView("db-viz.fileExplorer",{treeDataProvider:s,showCollapseAll:!0});i.subscriptions.push(o);let a=e.workspace.createFileSystemWatcher("**/*.{dbml,sql}",!1,!1,!1);a.onDidCreate(()=>s.refresh()),a.onDidDelete(()=>s.refresh()),a.onDidChange(()=>s.refresh()),i.subscriptions.push(a),i.subscriptions.push(e.commands.registerCommand("db-viz.openFile",async t=>{let r=t instanceof h?t.resourceUri:t;await e.commands.executeCommand("vscode.openWith",r,"db-viz.schemaEditor")})),i.subscriptions.push(e.commands.registerCommand("db-viz.newFile",async t=>{let r;t instanceof f?r=t.folderPath:t instanceof e.Uri?r=t.fsPath:r=e.workspace.workspaceFolders?.[0]?.uri.fsPath??"";let n=await e.window.showInputBox({prompt:"File name (without extension)",placeHolder:"schema",validateInput:m=>m.trim()?null:"Name cannot be empty"});if(!n)return;let d=e.Uri.file(c.join(r,`${n.trim()}.dbml`));await e.workspace.fs.writeFile(d,Buffer.from(`Table users {
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/extension.ts
+var extension_exports = {};
+__export(extension_exports, {
+  activate: () => activate,
+  deactivate: () => deactivate
+});
+module.exports = __toCommonJS(extension_exports);
+var vscode = __toESM(require("vscode"));
+var path = __toESM(require("path"));
+function activate(context) {
+  context.subscriptions.push(
+    vscode.window.registerCustomEditorProvider(
+      "db-viz.schemaEditor",
+      new DBVizEditorProvider(context),
+      {
+        webviewOptions: { retainContextWhenHidden: true },
+        supportsMultipleEditorsPerDocument: false
+      }
+    )
+  );
+  const treeProvider = new SchemaFileTreeProvider();
+  const treeView = vscode.window.createTreeView("db-viz.fileExplorer", {
+    treeDataProvider: treeProvider,
+    showCollapseAll: true
+  });
+  context.subscriptions.push(treeView);
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    "**/*.{dbml,sql}",
+    false,
+    false,
+    false
+  );
+  watcher.onDidCreate(() => treeProvider.refresh());
+  watcher.onDidDelete(() => treeProvider.refresh());
+  watcher.onDidChange(() => treeProvider.refresh());
+  context.subscriptions.push(watcher);
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.openFile",
+      async (item) => {
+        const uri = item instanceof SchemaFileItem ? item.resourceUri : item;
+        await vscode.commands.executeCommand("vscode.openWith", uri, "db-viz.schemaEditor");
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.newFile",
+      async (target) => {
+        let targetFolder;
+        if (target instanceof SchemaFolderItem) {
+          targetFolder = target.folderPath;
+        } else if (target instanceof vscode.Uri) {
+          targetFolder = target.fsPath;
+        } else {
+          targetFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+        }
+        const name = await vscode.window.showInputBox({
+          prompt: "File name (without extension)",
+          placeHolder: "schema",
+          validateInput: (v) => v.trim() ? null : "Name cannot be empty"
+        });
+        if (!name) return;
+        const fileUri = vscode.Uri.file(path.join(targetFolder, `${name.trim()}.dbml`));
+        const starter = `Table users {
   id integer [pk]
   name varchar
   email varchar [unique]
 }
-`,"utf8")),s.refresh(),await e.commands.executeCommand("vscode.openWith",d,"db-viz.schemaEditor")})),i.subscriptions.push(e.commands.registerCommand("db-viz.newFolder",async t=>{let r=t?.folderPath??e.workspace.workspaceFolders?.[0]?.uri.fsPath??"",n=await e.window.showInputBox({prompt:"Folder name",placeHolder:"schemas",validateInput:d=>d.trim()?null:"Name cannot be empty"});n&&(await e.workspace.fs.createDirectory(e.Uri.file(c.join(r,n.trim()))),s.refresh())})),i.subscriptions.push(e.commands.registerCommand("db-viz.rename",async t=>{let r=t instanceof h?t.resourceUri:e.Uri.file(t.folderPath),n=c.basename(r.fsPath),d=t instanceof h?c.extname(n):"",p=t instanceof h?c.basename(n,d):n,m=await e.window.showInputBox({prompt:"New name",value:p,validateInput:T=>T.trim()?null:"Name cannot be empty"});if(!m||m.trim()===p)return;let l=t instanceof h?`${m.trim()}${d}`:m.trim(),v=e.Uri.file(c.join(c.dirname(r.fsPath),l));await e.workspace.fs.rename(r,v,{overwrite:!1}),s.refresh()})),i.subscriptions.push(e.commands.registerCommand("db-viz.deleteFile",async t=>{let r=t.resourceUri;await e.window.showWarningMessage(`Delete "${c.basename(r.fsPath)}"?`,{modal:!0},"Delete")==="Delete"&&(await e.workspace.fs.delete(r),s.refresh())})),i.subscriptions.push(e.commands.registerCommand("db-viz.deleteFolder",async t=>{await e.window.showWarningMessage(`Delete folder "${c.basename(t.folderPath)}" and all its contents?`,{modal:!0},"Delete")==="Delete"&&(await e.workspace.fs.delete(e.Uri.file(t.folderPath),{recursive:!0}),s.refresh())})),i.subscriptions.push(e.commands.registerCommand("db-viz.refresh",()=>s.refresh())),i.subscriptions.push(e.commands.registerCommand("db-viz.openViewer",async()=>{let t=e.window.activeTextEditor;t?await e.commands.executeCommand("vscode.openWith",t.document.uri,"db-viz.schemaEditor"):e.window.showInformationMessage("Open a .dbml or .sql file first, then run this command.")}))}function P(){}var f=class extends e.TreeItem{constructor(o,a){super(o,e.TreeItemCollapsibleState.Collapsed);this.name=o;this.folderPath=a;this.tooltip=a,this.iconPath=new e.ThemeIcon("folder"),this.contextValue="schemaFolder"}},h=class extends e.TreeItem{constructor(o,a){super(o,e.TreeItemCollapsibleState.None);this.name=o;this.resourceUri=a;this.tooltip=a.fsPath,this.iconPath=new e.ThemeIcon(o.toLowerCase().endsWith(".sql")?"database":"symbol-class"),this.contextValue="schemaFile",this.command={command:"db-viz.openFile",title:"Open in DB Viz",arguments:[this]}}},w=class{constructor(){this._onDidChangeTreeData=new e.EventEmitter;this.onDidChangeTreeData=this._onDidChangeTreeData.event}refresh(){this._onDidChangeTreeData.fire()}getTreeItem(s){return s}async getChildren(s){if(!e.workspace.workspaceFolders?.length)return[];let o=s?s.folderPath:e.workspace.workspaceFolders[0].uri.fsPath;return this.buildChildren(o)}async buildChildren(s){let o;try{o=await e.workspace.fs.readDirectory(e.Uri.file(s))}catch{return[]}let a=[],t=[];for(let[r,n]of o)if(!(r.startsWith(".")||r==="node_modules"||r==="dist"))if(n===e.FileType.Directory){let d=c.join(s,r);await this.folderHasSchemaFiles(d)&&a.push(new f(r,d))}else n===e.FileType.File&&/\.(dbml|sql)$/i.test(r)&&t.push(new h(r,e.Uri.file(c.join(s,r))));return a.sort((r,n)=>r.name.localeCompare(n.name)),t.sort((r,n)=>r.name.localeCompare(n.name)),[...a,...t]}async folderHasSchemaFiles(s){let o;try{o=await e.workspace.fs.readDirectory(e.Uri.file(s))}catch{return!1}for(let[a,t]of o)if(!(a.startsWith(".")||a==="node_modules"||a==="dist")&&(t===e.FileType.File&&/\.(dbml|sql)$/i.test(a)||t===e.FileType.Directory&&await this.folderHasSchemaFiles(c.join(s,a))))return!0;return!1}},b=class{constructor(s){this.context=s}async resolveCustomTextEditor(s,o,a){o.webview.options={enableScripts:!0,localResourceRoots:[e.Uri.joinPath(this.context.extensionUri,"dist"),e.Uri.joinPath(this.context.extensionUri,"media")]},o.webview.html=this.getHtmlForWebview(o.webview,s);let t=l=>`layout:${l.toString()}`,r=()=>this.context.workspaceState.get(t(s.uri))??"",n=()=>{o.webview.postMessage({type:"init",content:s.getText(),fileName:c.basename(s.uri.fsPath),layoutData:r()})};o.onDidChangeViewState(l=>{l.webviewPanel.visible&&n()});let d=!1,p=setTimeout(()=>{d||(d=!0,n())},600);o.onDidDispose(()=>clearTimeout(p));let m=e.workspace.onDidChangeTextDocument(l=>{l.document.uri.toString()===s.uri.toString()&&o.webview.postMessage({type:"update",content:s.getText()})});o.onDidDispose(()=>{m.dispose()}),o.webview.onDidReceiveMessage(async l=>{switch(l.type){case"ready":{d=!0,clearTimeout(p),n();break}case"save":{let v=new e.WorkspaceEdit;v.replace(s.uri,new e.Range(0,0,s.lineCount,0),l.content),await e.workspace.applyEdit(v),await s.save(),o.webview.postMessage({type:"saved"});break}case"saveLayout":{await this.context.workspaceState.update(t(s.uri),l.layoutData);break}case"showError":{e.window.showErrorMessage(l.message);break}case"showInfo":{e.window.showInformationMessage(l.message);break}}})}getHtmlForWebview(s,o){let a=s.asWebviewUri(e.Uri.joinPath(this.context.extensionUri,"dist","webview.js")),t=s.asWebviewUri(e.Uri.joinPath(this.context.extensionUri,"dist","webview.css")),r=E();return`<!DOCTYPE html>
+`;
+        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(starter, "utf8"));
+        treeProvider.refresh();
+        await vscode.commands.executeCommand("vscode.openWith", fileUri, "db-viz.schemaEditor");
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.newFolder",
+      async (target) => {
+        const parentPath = target?.folderPath ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+        const name = await vscode.window.showInputBox({
+          prompt: "Folder name",
+          placeHolder: "schemas",
+          validateInput: (v) => v.trim() ? null : "Name cannot be empty"
+        });
+        if (!name) return;
+        await vscode.workspace.fs.createDirectory(
+          vscode.Uri.file(path.join(parentPath, name.trim()))
+        );
+        treeProvider.refresh();
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.rename",
+      async (item) => {
+        const oldUri = item instanceof SchemaFileItem ? item.resourceUri : vscode.Uri.file(item.folderPath);
+        const oldName = path.basename(oldUri.fsPath);
+        const ext = item instanceof SchemaFileItem ? path.extname(oldName) : "";
+        const baseName = item instanceof SchemaFileItem ? path.basename(oldName, ext) : oldName;
+        const newBase = await vscode.window.showInputBox({
+          prompt: "New name",
+          value: baseName,
+          validateInput: (v) => v.trim() ? null : "Name cannot be empty"
+        });
+        if (!newBase || newBase.trim() === baseName) return;
+        const newName = item instanceof SchemaFileItem ? `${newBase.trim()}${ext}` : newBase.trim();
+        const newUri = vscode.Uri.file(path.join(path.dirname(oldUri.fsPath), newName));
+        await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
+        treeProvider.refresh();
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.deleteFile",
+      async (item) => {
+        const uri = item.resourceUri;
+        const confirm = await vscode.window.showWarningMessage(
+          `Delete "${path.basename(uri.fsPath)}"?`,
+          { modal: true },
+          "Delete"
+        );
+        if (confirm !== "Delete") return;
+        await vscode.workspace.fs.delete(uri);
+        treeProvider.refresh();
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "db-viz.deleteFolder",
+      async (item) => {
+        const confirm = await vscode.window.showWarningMessage(
+          `Delete folder "${path.basename(item.folderPath)}" and all its contents?`,
+          { modal: true },
+          "Delete"
+        );
+        if (confirm !== "Delete") return;
+        await vscode.workspace.fs.delete(vscode.Uri.file(item.folderPath), { recursive: true });
+        treeProvider.refresh();
+      }
+    )
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("db-viz.refresh", () => treeProvider.refresh())
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("db-viz.openViewer", async () => {
+      const activeEditor = vscode.window.activeTextEditor;
+      if (activeEditor) {
+        await vscode.commands.executeCommand(
+          "vscode.openWith",
+          activeEditor.document.uri,
+          "db-viz.schemaEditor"
+        );
+      } else {
+        vscode.window.showInformationMessage(
+          "Open a .dbml or .sql file first, then run this command."
+        );
+      }
+    })
+  );
+}
+function deactivate() {
+}
+var SchemaFolderItem = class extends vscode.TreeItem {
+  constructor(name, folderPath) {
+    super(name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.name = name;
+    this.folderPath = folderPath;
+    this.tooltip = folderPath;
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "schemaFolder";
+  }
+};
+var SchemaFileItem = class extends vscode.TreeItem {
+  constructor(name, resourceUri) {
+    super(name, vscode.TreeItemCollapsibleState.None);
+    this.name = name;
+    this.resourceUri = resourceUri;
+    this.tooltip = resourceUri.fsPath;
+    this.iconPath = new vscode.ThemeIcon(
+      name.toLowerCase().endsWith(".sql") ? "database" : "symbol-class"
+    );
+    this.contextValue = "schemaFile";
+    this.command = {
+      command: "db-viz.openFile",
+      title: "Open in DB Viz",
+      arguments: [this]
+    };
+  }
+};
+var SchemaFileTreeProvider = class {
+  constructor() {
+    this._onDidChangeTreeData = new vscode.EventEmitter();
+    this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+  }
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+  getTreeItem(element) {
+    return element;
+  }
+  async getChildren(element) {
+    if (!vscode.workspace.workspaceFolders?.length) return [];
+    const rootPath = element ? element.folderPath : vscode.workspace.workspaceFolders[0].uri.fsPath;
+    return this.buildChildren(rootPath);
+  }
+  async buildChildren(dirPath) {
+    let entries;
+    try {
+      entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dirPath));
+    } catch {
+      return [];
+    }
+    const folders = [];
+    const files = [];
+    for (const [name, type] of entries) {
+      if (name.startsWith(".") || name === "node_modules" || name === "dist") continue;
+      if (type === vscode.FileType.Directory) {
+        const childPath = path.join(dirPath, name);
+        if (await this.folderHasSchemaFiles(childPath)) {
+          folders.push(new SchemaFolderItem(name, childPath));
+        }
+      } else if (type === vscode.FileType.File && /\.(dbml|sql)$/i.test(name)) {
+        files.push(new SchemaFileItem(name, vscode.Uri.file(path.join(dirPath, name))));
+      }
+    }
+    folders.sort((a, b) => a.name.localeCompare(b.name));
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    return [...folders, ...files];
+  }
+  async folderHasSchemaFiles(dirPath) {
+    let entries;
+    try {
+      entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dirPath));
+    } catch {
+      return false;
+    }
+    for (const [name, type] of entries) {
+      if (name.startsWith(".") || name === "node_modules" || name === "dist") continue;
+      if (type === vscode.FileType.File && /\.(dbml|sql)$/i.test(name)) return true;
+      if (type === vscode.FileType.Directory) {
+        if (await this.folderHasSchemaFiles(path.join(dirPath, name))) return true;
+      }
+    }
+    return false;
+  }
+};
+var DBVizEditorProvider = class {
+  constructor(context) {
+    this.context = context;
+  }
+  async resolveCustomTextEditor(document, webviewPanel, _token) {
+    webviewPanel.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, "dist"),
+        vscode.Uri.joinPath(this.context.extensionUri, "media")
+      ]
+    };
+    webviewPanel.webview.html = this.getHtmlForWebview(
+      webviewPanel.webview,
+      document
+    );
+    const getLayoutKey = (uri) => `layout:${uri.toString()}`;
+    const loadLayout = () => {
+      return this.context.workspaceState.get(
+        getLayoutKey(document.uri)
+      ) ?? "";
+    };
+    const sendUpdate = () => {
+      webviewPanel.webview.postMessage({
+        type: "init",
+        content: document.getText(),
+        fileName: path.basename(document.uri.fsPath),
+        layoutData: loadLayout()
+      });
+    };
+    webviewPanel.onDidChangeViewState((e) => {
+      if (e.webviewPanel.visible) sendUpdate();
+    });
+    let initSent = false;
+    const fallbackTimer = setTimeout(() => {
+      if (!initSent) {
+        initSent = true;
+        sendUpdate();
+      }
+    }, 600);
+    webviewPanel.onDidDispose(() => clearTimeout(fallbackTimer));
+    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+      (e) => {
+        if (e.document.uri.toString() === document.uri.toString()) {
+          webviewPanel.webview.postMessage({
+            type: "update",
+            content: document.getText()
+          });
+        }
+      }
+    );
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+    });
+    webviewPanel.webview.onDidReceiveMessage(async (msg) => {
+      switch (msg.type) {
+        case "ready": {
+          initSent = true;
+          clearTimeout(fallbackTimer);
+          sendUpdate();
+          break;
+        }
+        case "save": {
+          const edit = new vscode.WorkspaceEdit();
+          edit.replace(
+            document.uri,
+            new vscode.Range(0, 0, document.lineCount, 0),
+            msg.content
+          );
+          await vscode.workspace.applyEdit(edit);
+          await document.save();
+          webviewPanel.webview.postMessage({ type: "saved" });
+          break;
+        }
+        case "saveLayout": {
+          await this.context.workspaceState.update(
+            getLayoutKey(document.uri),
+            msg.layoutData
+          );
+          break;
+        }
+        case "showError": {
+          vscode.window.showErrorMessage(msg.message);
+          break;
+        }
+        case "showInfo": {
+          vscode.window.showInformationMessage(msg.message);
+          break;
+        }
+      }
+    });
+  }
+  getHtmlForWebview(webview, _document) {
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview.js")
+    );
+    const styleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview.css")
+    );
+    const nonce = getNonce();
+    return (
+      /* html */
+      `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'none';
-             script-src 'nonce-${r}';
-             style-src ${s.cspSource} 'unsafe-inline';
-             img-src ${s.cspSource} data: blob:;
-             font-src ${s.cspSource};" />
+             script-src 'nonce-${nonce}';
+             style-src ${webview.cspSource} 'unsafe-inline';
+             img-src ${webview.cspSource} data: blob:;
+             font-src ${webview.cspSource};" />
   <title>DB Viz</title>
-  <link rel="stylesheet" href="${t}" />
+  <link rel="stylesheet" href="${styleUri}" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body, #root { height: 100%; overflow: hidden; }
@@ -24,6 +402,22 @@
 </head>
 <body>
   <div id="root"></div>
-  <script nonce="${r}" src="${a}"></script>
+  <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
-</html>`}};function E(){let i="",s="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";for(let o=0;o<32;o++)i+=s.charAt(Math.floor(Math.random()*s.length));return i}0&&(module.exports={activate,deactivate});
+</html>`
+    );
+  }
+};
+function getNonce() {
+  let text = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  activate,
+  deactivate
+});
